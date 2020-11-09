@@ -30,9 +30,7 @@ fn main() {
 	code := os.read_file('agent.js')?
 	dm := host.new_device_manager()
 	device := dm.get_device_by_type(.local)?
-	pid := device.spawn('/usr/local/bin/r2', {
-		argv: ['/usr/local/bin/r2']
-	})?
+	pid := device.spawn('/usr/local/bin/r2', {})?
 	eprintln('ls: pid $pid')
 
 	session := device.attach(pid)?
@@ -70,10 +68,8 @@ Show time
 ---------
 
 ```
-$ v -b js agent.v
-$ v main.v
-$ ./main
-$ ./main
+$ v -o agent.js agent.v
+$ v run main.v
 ls: pid 66485
 message received: {"type":"log","level":"info","payload":"Hello world"}
 message received: {"type":"log","level":"info","payload":"frida message received"}
