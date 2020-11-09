@@ -1,0 +1,7 @@
+*.js
+main
+examples/target
+.git
+.*.swp
+.*.swo
+ext/
