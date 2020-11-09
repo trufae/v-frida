@@ -1,12 +1,12 @@
-import frida
+import frida.agent
 
-fn on_message(mut stanza frida.Stanza, mut data frida.Data) {
+fn on_message(mut stanza agent.Stanza, mut data agent.Data) {
 	eprintln('message received! ${stanza.payload}')
 
-	frida.recv(on_message)
+	agent.recv(on_message)
 }
 
 fn main() {
 	println('Hello world')
-	frida.recv(on_message)
+	agent.recv(on_message)
 }

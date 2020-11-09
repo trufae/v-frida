@@ -1,16 +1,26 @@
-import frida
-
-const (
-	code = $embed('agent.js')
-)
+import frida.host
+import os
 
 fn main() {
-	dm := frida.new_device_manager()
-	device := dm.get_device_by_type_sync(frida.device_type_usb)?
-	session := device.attach_sync(pid)?
-	script := session.create_script_sync(code)?
+	code := os.read_file('agent.js')?
+	dm := host.new_device_manager()
+	// device := dm.get_device_by_type(.usb)?
+	device := dm.get_device_by_type(.local)?
+	pid := device.spawn('/usr/local/bin/r2', {
+		argv: ['/usr/local/bin/r2']
+	})?
+	eprintln('ls: pid $pid')
+
+	session := device.attach(pid)?
+	script := session.create_script(code, {
+		name: 'v-frida'
+	})?
+
+	script.load()?
+	script.unload()?
+/*
 	script.on_message(on_message)
 	session.on_detached(on_detach)
-
-	script.load_sync()?
+*/
+	device.kill(pid)
 }
