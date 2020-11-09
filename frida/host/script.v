@@ -24,8 +24,8 @@ pub fn (s Script)eternalize() {
 	C.frida_script_eternalize_sync(s, 0, 0)
 }
 
-type MessageCallback = fn(s voidptr, raw_message charptr, data voidptr, user_data voidptr)
+type ScriptMessageCallback = fn(s voidptr, raw_message charptr, data voidptr, user_data voidptr)
 
-pub fn (s Script)on_message(cb MessageCallback, u voidptr) {
+pub fn (s Script)on_message(cb ScriptMessageCallback, u voidptr) {
 	C.g_signal_connect (s, 'message', cb, u)
 }

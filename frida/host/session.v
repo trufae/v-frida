@@ -5,6 +5,8 @@ type Session = voidptr
 pub struct ScriptOptions {
 	name string
 	runtime ScriptRuntime
+	on_message ScriptMessageCallback
+	user_data voidptr
 }
 
 pub enum ScriptRuntime {
@@ -24,6 +26,9 @@ pub fn (s Session)create_script(code string, options ScriptOptions) ?Script {
 	script := C.frida_session_create_script_sync(s, code.str, opt, 0, &e)
 	if e != 0 {
 		return error('Cannot load script')
+	}
+	if options.on_message != voidptr(0) {
+		script.on_message(options.on_message, options.user_data)
 	}
 	return script
 }

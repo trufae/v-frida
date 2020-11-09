@@ -15,9 +15,9 @@ pub fn (d Device)attach(pid int) ?Session {
 	return s
 }
 
-pub fn (d Device)resume(pid int, c voidptr) ? {
+pub fn (d Device)resume(pid int) ? {
 	e := voidptr(0)
-	C.frida_device_resume_sync(d, pid, c, &e)
+	C.frida_device_resume_sync(d, pid, voidptr(0), &e)
 }
 
 pub fn (d Device)spawn(argv0 string, so SpawnOptions) ?int {

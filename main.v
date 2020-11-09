@@ -1,26 +1,44 @@
 import frida.host
+import term
+import time
 import os
 
+fn echo(a string) {
+	println(term.yellow(a))
+}
+
 fn main() {
-	code := os.read_file('agent.js')?
+	echo('[>] v: target')
+	os.system('v examples/target.v')
+	echo('[>] v: agent')
+	os.system('v -o agent.js agent.v')
+
+	echo('[>] frida: device-manager')
+	// select target device and process
 	dm := host.new_device_manager()
 	// device := dm.get_device_by_type(.usb)?
 	device := dm.get_device_by_type(.local)?
-	pid := device.spawn('/usr/local/bin/r2', {
-		argv: ['/usr/local/bin/r2']
+	echo('[>] frida: spawning')
+	pid := device.spawn('examples/target', {
+		argv: ['examples/target']
 	})?
 	eprintln('ls: pid $pid')
-
 	session := device.attach(pid)?
 	session.on_detached(host.SessionDetachCallback(on_detached), voidptr(0))
 
+	echo('[>] frida: loading script')
+	// load agent code
+	code := os.read_file('agent.js')?
 	script := session.create_script(code, {
 		name: 'v-frida'
+		on_message: host.ScriptMessageCallback(on_message)
+		user_data: voidptr(0)
 	})?
 
-	script.on_message(host.MessageCallback(on_message), voidptr(0))
-
 	script.load()?
+	echo('[>] frida: unloading the scene')
+	device.resume(pid)
+	time.sleep(10)
 	script.unload()?
 	device.kill(pid)
 }
