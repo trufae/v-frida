@@ -20,12 +20,6 @@ The current code is at PoC level, so don't expect much
 Example
 -------
 
-```
-$ v -b js agent.v
-$ v main.v
-$ ./main
-```
-
 Host
 
 ```go
@@ -42,14 +36,15 @@ fn main() {
 	eprintln('ls: pid $pid')
 
 	session := device.attach(pid)?
+	session.on_detached(host.SessionDetachCallback(on_detached), voidptr(0))
+
 	script := session.create_script(code, {
 		name: 'v-frida'
 	})?
 
+	script.on_message(host.MessageCallback(on_message), voidptr(0))
+
 	script.load()?
-	script.on_message(on_message)
-	session.on_detached(on_detach)
-	// do nothing
 	script.unload()?
 	device.kill(pid)
 }
@@ -62,13 +57,29 @@ import frida.agent
 
 fn on_message(mut stanza agent.Stanza, mut data agent.Data) {
 	eprintln('message received! ${stanza.payload}')
-
 	agent.recv(on_message)
 }
 
 fn main() {
-	println('Hello world')
+	println('Hello world') // type=log, level=info, payload=helloWorld
 	agent.recv(on_message)
 }
 ```
 
+Show time
+---------
+
+```
+$ v -b js agent.v
+$ v main.v
+$ ./main
+$ ./main
+ls: pid 66485
+message received: {"type":"log","level":"info","payload":"Hello world"}
+message received: {"type":"log","level":"info","payload":"frida message received"}
+message received: {"type":"log","level":"info","payload":"frida message received"}
+message received: {"type":"log","level":"info","payload":"frida message received"}
+...
+V panic: The connection is closed
+$
+```

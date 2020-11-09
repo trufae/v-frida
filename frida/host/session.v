@@ -13,8 +13,6 @@ pub enum ScriptRuntime {
 }
 
 
-
-
 pub fn (s Session)create_script(code string, options ScriptOptions) ?Script {
 	e := voidptr(0)
 /*
@@ -28,5 +26,19 @@ pub fn (s Session)create_script(code string, options ScriptOptions) ?Script {
 		return error('Cannot load script')
 	}
 	return script
+}
+
+pub enum SessionDetachReason {
+	application_requested = C.FRIDA_SESSION_DETACH_REASON_APPLICATION_REQUESTED
+	process_replaced = C.FRIDA_SESSION_DETACH_REASON_PROCESS_REPLACED
+	process_terminated = C.FRIDA_SESSION_DETACH_REASON_PROCESS_TERMINATED
+	server_terminated = C.FRIDA_SESSION_DETACH_REASON_SERVER_TERMINATED
+	device_lost = C.FRIDA_SESSION_DETACH_REASON_DEVICE_LOST
+}
+
+type SessionDetachCallback = fn(s voidptr, reason SessionDetachReason, crash voidptr, user_data voidptr)
+
+pub fn (s Session)on_detached(cb SessionDetachCallback, user_data voidptr) {
+	C.g_signal_connect(s, 'detached', cb, user_data)
 }
 

@@ -1,6 +1,14 @@
 module host
 
-type GError = voidptr
+type GQuark = int
+
+struct GError {
+	q GQuark
+	code int
+	message charptr
+}
+
+fn C.g_signal_connect(s voidptr, a charptr, cb voidptr, u voidptr)
 
 fn C.frida_device_manager_get_device_by_type_sync(dm DeviceManager, dt DeviceType, a voidptr, b voidptr, err &GError) Device
 fn C.frida_device_manager_new() DeviceManager
@@ -15,7 +23,7 @@ fn C.frida_spawn_options_new() voidptr
 fn C.frida_spawn_options_set_argv(so voidptr, argv voidptr, argc int)
 fn C.g_object_unref(p voidptr)
 
-fn C.frida_script_load_sync(s Script, c voidptr, e voidptr)
+fn C.frida_script_load_sync(s Script, c voidptr, e &C.GError)
 fn C.frida_script_unload_sync(s Script, c voidptr, e voidptr)
 
 // C.FRIDA_DEVICE_TYPE_LOCAL

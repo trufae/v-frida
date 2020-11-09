@@ -12,15 +12,25 @@ fn main() {
 	eprintln('ls: pid $pid')
 
 	session := device.attach(pid)?
+	session.on_detached(host.SessionDetachCallback(on_detached), voidptr(0))
+
 	script := session.create_script(code, {
 		name: 'v-frida'
 	})?
 
+	script.on_message(host.MessageCallback(on_message), voidptr(0))
+
 	script.load()?
 	script.unload()?
-/*
-	script.on_message(on_message)
-	session.on_detached(on_detach)
-*/
 	device.kill(pid)
+}
+
+// TODO. wrap this thing, and use generics to hold userdata like in vweb
+fn on_message(s host.Script, raw_message charptr, data voidptr, user_data voidptr) {
+	msg := tos_clone(raw_message)
+	println('message received: $msg')
+}
+
+fn on_detached(s host.Session, reason host.SessionDetachReason, crash voidptr, user_data voidptr) {
+	println('detached')
 }
