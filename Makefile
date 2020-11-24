@@ -1,4 +1,4 @@
-frida_version=14.0.5
+frida_version=14.0.8
 USE_WGET?=0
 
 all: main
