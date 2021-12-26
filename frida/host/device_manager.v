@@ -15,7 +15,7 @@ pub fn new_device_manager() DeviceManager {
 }
 
 pub fn (dm DeviceManager)get_device_by_type(dt DeviceType) ?Device {
-	err := voidptr(0)
+	err := &GError{}
 	res := C.frida_device_manager_get_device_by_type_sync(dm, dt, 0, 0, &err)
 	if res == 0 && err != 0 {
 		// err->message

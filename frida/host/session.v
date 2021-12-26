@@ -44,6 +44,6 @@ pub enum SessionDetachReason {
 type SessionDetachCallback = fn(s voidptr, reason SessionDetachReason, crash voidptr, user_data voidptr)
 
 pub fn (s Session)on_detached(cb SessionDetachCallback, user_data voidptr) {
-	C.g_signal_connect(s, 'detached', cb, user_data)
+	C.g_signal_connect(s, c'detached', cb, user_data)
 }
 

@@ -1,23 +1,29 @@
 module agent
 
+struct Module {
+pub:
+	name string
+}
 struct Symbol {
 pub:
 	address string
 	name string
 	library string
+	@type string
+	@isGlobal bool
 }
 
 // type Callback = fn(mut stanza Stanza, mut data Data) bool
-type Callback = voidptr
+type Callback = fn (mut Stanza, mut Data)
 type Handler = voidptr
 type Pointer = voidptr
 
 fn JS.ptr(s string) any
-fn JS.Process.enumerateModules() any
+fn JS.Process.enumerateModules() []Module
 fn JS.Module.findExportByName(moduleName string, exportName string) any
-fn JS.Interceptor.attach(address Pointer, callback AttachCallback)
+fn JS.Interceptor.attach(address Pointer, callback AttachCallback) Handler
 fn JS.Interceptor.flush()
-fn JS.Module.enumerateSymbols() []Symbol
+fn JS.Module.enumerateSymbols(mod Module) []Symbol
 
 
 pub struct AttachOptions {
@@ -33,7 +39,7 @@ pub fn (p Pointer)attach(ao AttachOptions) Handler {
 	if ao.on_leave != voidptr(0) {
 		code += 'onLeave: ${ao.on_leave}'
 	}
-	return JS.Interceptor.attach(p, JS.eval('{' + code + '}'))
+	return JS.Interceptor.attach(p, JS.eval('{${code}}'))
 }
 
 pub struct Stanza {
@@ -59,7 +65,10 @@ pub fn send(message string, payload string) {
 
 type Retval = voidptr
 
-pub fn (rv Retval)replace(res voidptr)
+pub fn (rv Retval)replace(res voidptr) {
+println("REAPLACE")
+	# $rv.replace(res)
+}
 
 type OnEnterCallback = fn(args voidptr)
 type OnLeaveCallback = fn(retval Retval)
@@ -75,8 +84,6 @@ pub struct InterceptorOptions {
 }
 
 pub fn interceptor_attach(address string, ao InterceptorOptions) Handler {
-	mut k := JS.eval('{ onLeave: ao.on_leave }')
-/*
 	//
 	mut code := ''
 	if JS.eval('typeof ao.on_enter') != 'undefined' {
@@ -85,11 +92,9 @@ pub fn interceptor_attach(address string, ao InterceptorOptions) Handler {
 	if JS.eval('typeof ao.on_leave') != 'undefined' {
 		code += 'onLeave: ${ao.on_leave.name}'
 	}
-	eprintln('GONNA EVAL $code')
-*/
+	mut k := JS.eval('{${code}}')
 	return JS.Interceptor.attach(JS.ptr(address), k)
 }
-
 
 pub fn find_export_by_name(name string) ?Pointer {
 	return JS.Module.findExportByName('', name)

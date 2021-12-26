@@ -6,8 +6,10 @@ all: main
 include frida.mk
 
 main: $(FRIDA_SDK) main.v agent.v
-	v -b js agent.v
-	v main.v
+	#v -o examples/target examples/target.v
+	#v -b js_freestanding agent.v
+	v -g main.v
+	./main
 
 .PHONY: main
 
