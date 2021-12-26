@@ -21,11 +21,11 @@ type Handler = voidptr
 type Pointer = voidptr
 
 fn JS.ptr(s string) any
-fn JS.Process.enumerateModules() []Module
+fn JS.Process.enumerateModules() ?[]Module
 fn JS.Module.findExportByName(moduleName string, exportName string) any
 fn JS.Interceptor.attach(address Pointer, callback AttachCallback) Handler
 fn JS.Interceptor.flush()
-fn JS.Module.enumerateSymbols(mod Module) []Symbol
+fn JS.Module.enumerateSymbols(mod Module) ?[]Symbol
 
 pub struct AttachOptions {
 	on_enter string // OnEnterCallback
