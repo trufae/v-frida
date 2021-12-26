@@ -5,11 +5,11 @@ mut:
 	n int
 }
 
-pub fn (mut s State)pull() int {
+pub fn (mut s State) pull() int {
 	return s.n++
 }
 
-pub fn (s State)is_ready() bool {
+pub fn (s State) is_ready() bool {
 	return s.n < 10
 }
 

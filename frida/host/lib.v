@@ -8,13 +8,13 @@ module host
 
 pub const agent_v_header = 'function require() {return {};};var process={stdout:{write:console.log}};'
 
-
 type GQuark = int
+
 // type GError = C.GError
 
 struct GError {
-	q GQuark
-	code int
+	q       GQuark
+	code    int
 	message charptr
 }
 
@@ -39,4 +39,3 @@ fn C.frida_script_load_sync(s Script, c voidptr, e &&GError)
 fn C.frida_script_unload_sync(s Script, c voidptr, e &&GError)
 
 // C.FRIDA_DEVICE_TYPE_LOCAL
-

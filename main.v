@@ -7,11 +7,11 @@ fn echo(a string) {
 	println(term.yellow(a))
 }
 
-fn fin(device host.Device, script host.Script, pid int)? {
+fn fin(device host.Device, script host.Script, pid int) ? {
 	time.sleep(10 * 100000)
 	echo('[>] frida: unloading the scene')
-	script.unload()?
-	device.kill(pid)?
+	script.unload() ?
+	device.kill(pid) ?
 	exit(1)
 }
 
@@ -25,38 +25,34 @@ fn main() {
 	// select target device and process
 	dm := host.new_device_manager()
 	// device := dm.get_device_by_type(.usb)?
-	device := dm.get_device_by_type(.local)?
+	device := dm.get_device_by_type(.local) ?
 	echo('[>] frida: spawning')
-	pid := device.spawn('examples/target', host.SpawnOptions {
+	pid := device.spawn('examples/target', host.SpawnOptions{
 		argv: ['examples/target']
-	})?
+	}) ?
 	eprintln('ls: pid $pid')
-	session := device.attach(pid)?
+	session := device.attach(pid) ?
 	session.on_detached(host.SessionDetachCallback(on_detached), 0)
 
 	echo('[>] frida: loading script')
 	// load agent code
-	code := host.agent_v_header + os.read_file('agent.js')?
-	
-	script := session.create_script(code, host.ScriptOptions {
+	code := host.agent_v_header + os.read_file('agent.js') ?
+
+	script := session.create_script(code, host.ScriptOptions{
 		name: 'v-frida'
 		on_message: host.ScriptMessageCallback(on_message)
 		user_data: 0
-	})?
+	}) ?
 
-	script.load() or {
-		println('failed to load the agent script')
-	}
-	device.resume(pid)?
+	script.load() or { println('failed to load the agent script') }
+	device.resume(pid) ?
 	fill := go fin(device, script, pid)
-	fill.wait() or {
-		eprintln('Oops: $err')
-	}
+	fill.wait() or { eprintln('Oops: $err') }
 }
 
 // TODO. wrap this thing, and use generics to hold userdata like in vweb
 fn on_message(s host.Script, raw_message charptr, data voidptr, user_data voidptr) {
-	println("MSGREV")
+	println('MSGREV')
 	unsafe {
 		msg := tos2(raw_message)
 		println('message received: $msg')
