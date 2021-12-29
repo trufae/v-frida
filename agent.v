@@ -12,9 +12,9 @@ fn on_message(mut stanza agent.Stanza, mut data agent.Data) {
 	agent.recv(on_message)
 }
 
-fn statepull_hook(retval agent.Retval) {
-	println('METHOD INTERCEPTION WORKS')
-	retval.replace(voidptr(1))
+pub fn statepull_hook(retval agent.Retval) {
+	println('pull method pwned')
+	retval.replace(JS.Number(666))
 }
 
 fn hook_stuff() {

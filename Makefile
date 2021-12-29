@@ -10,7 +10,7 @@ main: $(FRIDA_SDK) main.v
 	./main
 
 fmt indent:
-	v fmt -w . frida
+	v fmt -w main.v agent.v frida
 
 .PHONY: main
 

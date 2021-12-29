@@ -43,8 +43,8 @@ pub fn (d Device) kill(pid int) ? {
 }
 
 pub fn (d Device) get_process_by_name(process_specifier string, err &&GError) ?Process {
-/*
-  2         FridaProcess *process = frida_device_get_process_by_name_sync (
+	/*
+	2         FridaProcess *process = frida_device_get_process_by_name_sync (
   3                 device, lo->process_specifier, 0, cancellable, &error);
   4         if (error != NULL) {
   5                 error = NULL;
@@ -64,6 +64,6 @@ pub fn (d Device) get_process_by_name(process_specifier string, err &&GError) ?P
  19                 return false;
  20         }
  21         lo->pid = frida_process_get_pid (process);
-*/
-	return C.error('TODO')
+	*/
+	return error('TODO')
 }

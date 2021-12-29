@@ -20,13 +20,13 @@ pub:
 // type Callback = fn(mut stanza Stanza, mut data Data) bool
 type Callback = fn (mut Stanza, mut Data)
 
-type Handler = voidptr
+type Handler = int
 type Pointer = voidptr
 
 fn JS.ptr(s string) any
 fn JS.Process.enumerateModulesSync() []Module
 fn JS.Module.findExportByName(moduleName string, exportName string) any
-fn JS.Interceptor.attach(address Pointer, callback InterceptorOptions) Handler
+fn JS.Interceptor.attach(address Pointer, io JS.Object) Handler
 fn JS.Interceptor.flush()
 fn JS.Module.enumerateSymbolsSync(module_name string) []Symbol
 fn JS.Module.enumerateExportsSync(module_name string) []Symbol
@@ -68,14 +68,13 @@ pub fn send(message string, payload string) {
 
 type Retval = voidptr
 
-pub fn (rv Retval) replace(res voidptr) {
-	println('REAPLACE')
-	#$rv.replace(res)
+pub fn (rv Retval) replace(res any) {
+	println('replace return value $res')
+	#rv.replace(res)
 }
 
 pub fn interceptor_attach(addr string, ao InterceptorOptions) Handler {
-	//
-	mut code := '{'
+	mut code := 'Object({'
 	if ao.on_enter != '' {
 		code += 'onEnter: main__$ao.on_enter'
 	}
@@ -83,11 +82,12 @@ pub fn interceptor_attach(addr string, ao InterceptorOptions) Handler {
 		if ao.on_enter != '' {
 			code += ','
 		}
+		// code += 'onLeave: function() {console.log("pown");}'
 		code += 'onLeave: main__$ao.on_leave'
 	}
-	code += '}'
-	eprintln('ATTACH $code')
-	return JS.Interceptor.attach(JS.ptr(addr), JS.eval(code))
+	code += '})'
+	ecode := JS.eval(JS.String(code))
+	return JS.Interceptor.attach(JS.ptr(addr), ecode)
 }
 
 pub fn find_export_by_name(name string) ?Pointer {
