@@ -32,12 +32,13 @@ fn watchdog(fs &FridaState) ? {
 
 fn (mut fs FridaState) load_agent(fname string) ? {
 	echo('[>] frida: loading script')
-	sname := if fname.ends_with('.v') {
+	mut sname := fname
+	if fname.ends_with('.v') {
 		echo('[>] v: agent')
-		os.system('v -b js_freestanding -o ${fname}.js $fname')
-		'${fname}.js'
-	} else {
-		fname
+		if os.system('v -b js_freestanding -o ${fname}.js $fname') != 0 {
+			return error('agent oops')
+		}
+		sname = '${fname}.js'
 	}
 	code := host.agent_v_header + os.read_file(sname) ?
 	script := fs.session.create_script(code, host.ScriptOptions{
