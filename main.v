@@ -13,7 +13,6 @@ pub mut:
 	device   host.Device
 	pid      int
 	script   host.Script
-	usb_mode bool
 	dt       host.DeviceType
 	session  host.Session
 	dm       host.DeviceManager
@@ -52,7 +51,7 @@ fn (mut fs FridaState) load_agent(fname string) ? {
 }
 
 fn (mut fs FridaState) attach_by_name(appname string) ? {
-	if fs.usb_mode {
+	if fs.dt == .usb {
 		fs.device = fs.dm.get_device_by_type(.usb) ?
 	}
 	fs.session = fs.device.attach(fs.pid) ?
@@ -80,7 +79,6 @@ fn new_frida_state(dt host.DeviceType) &FridaState {
 	mut fs := &FridaState{
 		dt: dt
 		dm: host.new_device_manager()
-		usb_mode: dt == .usb
 		pid: -1
 	}
 	return fs
