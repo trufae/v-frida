@@ -3,12 +3,15 @@ module agent
 struct Module {
 pub:
 	name string
+	path string
+	base u64
+	size u64
 }
 
 struct Symbol {
 pub:
-	address string
 	name    string
+	address string
 	library string
 	@type   string
 	//	@isGlobal bool
@@ -21,26 +24,26 @@ type Handler = voidptr
 type Pointer = voidptr
 
 fn JS.ptr(s string) any
-fn JS.Process.enumerateModules() ?[]Module
+fn JS.Process.enumerateModulesSync() []Module
 fn JS.Module.findExportByName(moduleName string, exportName string) any
-fn JS.Interceptor.attach(address Pointer, callback AttachCallback) Handler
+fn JS.Interceptor.attach(address Pointer, callback InterceptorOptions) Handler
 fn JS.Interceptor.flush()
-fn JS.Module.enumerateSymbols(mod Module) ?[]Symbol
+fn JS.Module.enumerateSymbolsSync(module_name string) []Symbol
+fn JS.Module.enumerateExportsSync(module_name string) []Symbol
 
-pub struct AttachOptions {
-	on_enter string // OnEnterCallback
-	on_leave string // OnLeaveCallback
+type OnEnterCallback = fn (args voidptr)
+
+type OnLeaveCallback = fn (retval Retval)
+
+struct FunctionPointerType {
+	name string
 }
 
-pub fn (p Pointer) attach(ao AttachOptions) Handler {
-	mut code := ''
-	if ao.on_enter != voidptr(0) {
-		code += 'onEnter: $ao.on_enter'
-	}
-	if ao.on_leave != voidptr(0) {
-		code += 'onLeave: $ao.on_leave'
-	}
-	return JS.Interceptor.attach(p, JS.eval('{$code}'))
+type FunctionPointer = voidptr
+
+pub struct InterceptorOptions {
+	on_enter string // OnEnterCallback
+	on_leave string // OnLeaveCallback
 }
 
 pub struct Stanza {
@@ -70,32 +73,21 @@ pub fn (rv Retval) replace(res voidptr) {
 	#$rv.replace(res)
 }
 
-type OnEnterCallback = fn (args voidptr)
-
-type OnLeaveCallback = fn (retval Retval)
-
-struct FunctionPointerType {
-	name string
-}
-
-type FunctionPointer = voidptr
-
-pub struct InterceptorOptions {
-	on_enter FunctionPointerType // string // OnEnterCallback
-	on_leave FunctionPointerType // string // OnLeaveCallback
-}
-
-pub fn interceptor_attach(address string, ao InterceptorOptions) Handler {
+pub fn interceptor_attach(addr string, ao InterceptorOptions) Handler {
 	//
-	mut code := ''
-	if JS.eval('typeof ao.on_enter') != 'undefined' {
-		code += 'onEnter: $ao.on_enter.name'
+	mut code := '{'
+	if ao.on_enter != '' {
+		code += 'onEnter: main__$ao.on_enter'
 	}
-	if JS.eval('typeof ao.on_leave') != 'undefined' {
-		code += 'onLeave: $ao.on_leave.name'
+	if ao.on_leave != '' {
+		if ao.on_enter != '' {
+			code += ','
+		}
+		code += 'onLeave: main__$ao.on_leave'
 	}
-	mut k := JS.eval('{$code}')
-	return JS.Interceptor.attach(JS.ptr(address), k)
+	code += '}'
+	eprintln('ATTACH $code')
+	return JS.Interceptor.attach(JS.ptr(addr), JS.eval(code))
 }
 
 pub fn find_export_by_name(name string) ?Pointer {

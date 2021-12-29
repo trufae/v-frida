@@ -26,7 +26,7 @@ pub fn (s Script) unload() ? {
 }
 
 pub fn (s Script) eternalize() {
-	// C.frida_script_eternalize_sync(s, 0, 0)
+	C.frida_script_eternalize_sync(s, 0, 0)
 }
 
 type ScriptMessageCallback = fn (s voidptr, raw_message charptr, data voidptr, user_data voidptr)

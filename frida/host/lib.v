@@ -18,6 +18,10 @@ struct GError {
 	message charptr
 }
 
+struct Process {
+	pid int
+}
+
 fn C.g_signal_connect(s voidptr, a charptr, cb voidptr, u voidptr)
 
 fn C.frida_device_manager_get_device_by_type_sync(dm DeviceManager, dt DeviceType, a voidptr, b voidptr, err &&GError) Device

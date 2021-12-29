@@ -2,60 +2,112 @@ import frida.host
 import term
 import time
 import os
+import json
+
+struct Message {
+	payload string
+}
+
+struct FridaState {
+pub mut:
+	device   host.Device
+	pid      int
+	script   host.Script
+	usb_mode bool
+	dt       host.DeviceType
+	session  host.Session
+	dm       host.DeviceManager
+}
 
 fn echo(a string) {
 	println(term.yellow(a))
 }
 
-fn fin(device host.Device, script host.Script, pid int) ? {
+fn watchdog(fs &FridaState) ? {
 	time.sleep(10 * 100000)
 	echo('[>] frida: unloading the scene')
-	script.unload() ?
-	device.kill(pid) ?
+	fs.script.unload() ?
+	fs.device.kill(fs.pid) ?
 	exit(1)
 }
 
-fn main() {
-	echo('[>] v: target')
-	os.system('v examples/target.v')
-	echo('[>] v: agent')
-	os.system('v -o agent.js agent.v')
-
-	echo('[>] frida: device-manager')
-	// select target device and process
-	dm := host.new_device_manager()
-	// device := dm.get_device_by_type(.usb)?
-	device := dm.get_device_by_type(.local) ?
-	echo('[>] frida: spawning')
-	pid := device.spawn('examples/target', host.SpawnOptions{
-		argv: ['examples/target']
-	}) ?
-	eprintln('ls: pid $pid')
-	session := device.attach(pid) ?
-	session.on_detached(host.SessionDetachCallback(on_detached), 0)
-
+fn (mut fs FridaState) load_agent(fname string) ? {
 	echo('[>] frida: loading script')
-	// load agent code
-	code := host.agent_v_header + os.read_file('agent.js') ?
-
-	script := session.create_script(code, host.ScriptOptions{
+	sname := if fname.ends_with('.v') {
+		echo('[>] v: agent')
+		os.system('v -b js_freestanding -o ${fname}.js $fname')
+		'${fname}.js'
+	} else {
+		fname
+	}
+	code := host.agent_v_header + os.read_file(sname) ?
+	script := fs.session.create_script(code, host.ScriptOptions{
 		name: 'v-frida'
 		on_message: host.ScriptMessageCallback(on_message)
 		user_data: 0
 	}) ?
 
 	script.load() or { println('failed to load the agent script') }
-	device.resume(pid) ?
-	fill := go fin(device, script, pid)
+	fs.script = script
+}
+
+fn (mut fs FridaState) attach_by_name(appname string) ? {
+	if fs.usb_mode {
+		fs.device = fs.dm.get_device_by_type(.usb) ?
+	}
+	fs.session = fs.device.attach(fs.pid) ?
+}
+
+fn (mut fs FridaState) spawn(src string) ? {
+	exe := if src.ends_with('.v') {
+		echo('[>] v: target')
+		os.system('v $src')
+		src.replace('.v', '')
+	} else {
+		src
+	}
+	fs.device = fs.dm.get_device_by_type(.local) ?
+	echo('[>] frida: spawning')
+	fs.pid = fs.device.spawn(exe, host.SpawnOptions{
+		argv: [exe]
+	}) ?
+	eprintln('ls: pid $fs.pid')
+
+	fs.session = fs.device.attach(fs.pid) ?
+}
+
+fn new_frida_state(dt host.DeviceType) &FridaState {
+	mut fs := &FridaState{
+		dt: dt
+		dm: host.new_device_manager()
+		usb_mode: dt == .usb
+		pid: -1
+	}
+	return fs
+}
+
+fn main() {
+	echo('[>] frida: device-manager')
+
+	mut fs := new_frida_state(.usb)
+	fs.spawn('examples/target.v') ?
+	// fs.attach('Twitter') ?
+
+	fs.load_agent('agent.v') ?
+
+	fs.session.on_detached(host.SessionDetachCallback(on_detached), 0)
+
+	fs.device.resume(fs.pid) ?
+	fill := go watchdog(fs)
 	fill.wait() or { eprintln('Oops: $err') }
 }
 
 // TODO. wrap this thing, and use generics to hold userdata like in vweb
 fn on_message(s host.Script, raw_message charptr, data voidptr, user_data voidptr) {
-	println('MSGREV')
 	unsafe {
-		msg := tos2(raw_message)
-		println('message received: $msg')
+		txt := tos2(raw_message)
+		msg := json.decode(Message, txt) or { return }
+		println('[main.v < agent.v]: $msg.payload')
 	}
 }
 

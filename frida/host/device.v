@@ -41,3 +41,29 @@ pub fn (d Device) kill(pid int) ? {
 		return error('cannot kill')
 	}
 }
+
+pub fn (d Device) get_process_by_name(process_specifier string, err &&GError) ?Process {
+/*
+  2         FridaProcess *process = frida_device_get_process_by_name_sync (
+  3                 device, lo->process_specifier, 0, cancellable, &error);
+  4         if (error != NULL) {
+  5                 error = NULL;
+  6                 char *procname = resolve_process_name_by_package_name(device, canc    ellable, lo->process_specifier);
+  7                 if (procname) {
+  8                         free (lo->process_specifier);
+  9                         lo->process_specifier = procname;
+ 10                 }
+ 11                 process = frida_device_get_process_by_name_sync (
+ 12                 device, lo->process_specifier, 0, cancellable, &error);
+ 13         }
+ 14         if (error != NULL) {
+ 15                 if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+ 16                         eprintf ("%s\n", error->message);
+ 17                 }
+ 18                 g_error_free (error);
+ 19                 return false;
+ 20         }
+ 21         lo->pid = frida_process_get_pid (process);
+*/
+	return C.error('TODO')
+}
