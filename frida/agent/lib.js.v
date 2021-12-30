@@ -86,8 +86,9 @@ pub fn interceptor_attach(addr string, ao InterceptorOptions) Handler {
 		code += 'onLeave: main__$ao.on_leave'
 	}
 	code += '})'
-	ecode := JS.eval(JS.String(code))
-	return JS.Interceptor.attach(JS.ptr(addr), ecode)
+	mut handler := Handler(0)
+	# handler = Interceptor.attach(ptr(addr), eval(code.str))
+	return handler
 }
 
 pub fn find_export_by_name(name string) ?Pointer {

@@ -24,7 +24,6 @@ fn hook_stuff() {
 		for sym in symbols {
 			if sym.name == 'main__State_pull' {
 				eprintln('Symbol to hook found $sym.name')
-				// JS.eval('{ on_leave: state_is_ready_on_leave }'))
 				agent.interceptor_attach(sym.address, agent.InterceptorOptions{
 					on_leave: 'statepull_hook'
 				})
